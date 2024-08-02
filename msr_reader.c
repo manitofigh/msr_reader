@@ -31,8 +31,8 @@ static const u32 msr_addresses[NUM_COUNTERS + NUM_CONTROLLERS][NUM_CHA] = {
 static void setup_cha_controller(void)
 {
     int i;
-    u64 event_select = 0x34; // LLC_LOOKUP event
-    u64 umask = 0x21; // DATA_READ filter
+    u64 event_select = 0x408F34; // LLC_LOOKUP event (Intel SDM, Volume 4, Table 2-95)
+    u64 umask = 0x21; // DATA_READ filter (Intel SDM, Volume 4, Table 2-96)
 
     printk(KERN_INFO "Setting up CHA controllers to monitor LLC_LOOKUP event\n");
 
@@ -47,8 +47,8 @@ static void setup_cha_controller(void)
     printk(KERN_INFO "Event Code: 0x%llX, Umask: 0x%llX\n", (unsigned long long)event_select, (unsigned long long)umask);
     printk(KERN_INFO "Umask - DATA_READ: 0x%llX, ANY: 0x%llX, LOCAL: 0x%llX\n", 0x01ULL, 0x01ULL, 0x01ULL);
     printk(KERN_INFO "Umask - REMOTE_SNOOP: 0x%llX, REMOTE: 0x%llX\n", 0x01ULL, 0x01ULL);
-    printk(KERN_INFO "Max Threshold: %u, Register Restriction: 0-3\n", 0);
-    printk(KERN_INFO "Filter Registers: FILTER0: 0x%llX, FILTER1: 0x%llX\n", 0x0000000101ULL, 0x0000000101ULL);
+    printk(KERN_INFO "Max Threshold: %u, Register Restriction: 0-3 (Intel SDM, Volume 4, Table 2-95)\n", 0);
+    printk(KERN_INFO "Filter Registers: FILTER0: 0x%llX, FILTER1: 0x%llX (Intel SDM, Volume 4, Table 2-96)\n", 0x0000000101ULL, 0x0000000101ULL);
 }
 
 static void perform_memory_task(void)

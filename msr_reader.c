@@ -31,17 +31,19 @@ static const u32 msr_addresses[NUM_COUNTERS + NUM_CONTROLLERS][NUM_CHA] = {
 static void setup_cha_controller(void)
 {
     int i;
-    u64 event_select = 0x408F34; // LLC_LOOKUP event (Intel SDM, Volume 4, Table 2-95)
-    u64 umask = 0x21; // DATA_READ filter (Intel SDM, Volume 4, Table 2-96)
+    u64 event_select = 0x34; // LLC_LOOKUP event
+    u64 umask = 0x11; // DATA_READ filter
+    u64 config_value = (umask << 8) | event_select;
 
     printk(KERN_INFO "Setting up CHA controllers to monitor LLC_LOOKUP event\n");
 
     for (i = 0; i < NUM_CHA; i++) {
-        // Configure the CHA controller to monitor LLC_LOOKUP event
-        wrmsrl(msr_addresses[4][i], event_select | (umask << 8));
-        wrmsrl(msr_addresses[5][i], 0);
-        wrmsrl(msr_addresses[6][i], 0);
-        wrmsrl(msr_addresses[7][i], 0);
+        // Configure the CHA controller
+        native_write_msr(msr_addresses[4][i], (u32)config_value, (u32)(config_value >> 32));
+        // Reset and enable the counter
+        native_write_msr(msr_addresses[0][i], 0, 0); // Reset counter
+        native_write_msr(msr_addresses[5][i], (1ULL << 22), 0); // Enable counter
+        // hmm might need to set up FILTER0 and FILTER1 here as well
     }
 
     printk(KERN_INFO "Event Code: 0x%llX, Umask: 0x%llX\n", (unsigned long long)event_select, (unsigned long long)umask);
@@ -84,7 +86,7 @@ static void read_cha_counters(void)
     for (i = 0; i < NUM_COUNTERS; i++) {
         printk(KERN_INFO "Counter %d (ctr%d):\n", i, i);
         for (j = 0; j < NUM_CHA; j++) {
-            rdmsrl(msr_addresses[i][j], msr_value);
+            msr_value = native_read_msr(msr_addresses[i][j]);
             printk(KERN_INFO "CHA %2d | MSR 0x%04X: 0x%016llX\n", j, msr_addresses[i][j], msr_value);
         }
         printk(KERN_INFO "\n");

@@ -1,1 +1,0 @@
-savedcmd_/home/mani/dev/km/msr_reader/msr_reader.ko := ld -r -m elf_x86_64 -z noexecstack --build-id=sha1  -T scripts/module.lds -o /home/mani/dev/km/msr_reader/msr_reader.ko /home/mani/dev/km/msr_reader/msr_reader.o /home/mani/dev/km/msr_reader/msr_reader.mod.o;  make -f ./arch/x86/Makefile.postlink /home/mani/dev/km/msr_reader/msr_reader.ko

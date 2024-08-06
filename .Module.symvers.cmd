@@ -1,1 +1,0 @@
-savedcmd_/home/mani/dev/km/msr_reader/Module.symvers :=  scripts/mod/modpost -m -a      -o /home/mani/dev/km/msr_reader/Module.symvers -T /home/mani/dev/km/msr_reader/modules.order -i Module.symvers -e 

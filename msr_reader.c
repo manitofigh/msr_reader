@@ -31,14 +31,14 @@ static const u32 msr_addresses[NUM_COUNTERS + NUM_CONTROLLERS][NUM_CHA] = {
 static void setup_cha_controller(void)
 {
     int i;
+    // u64 event_select = 0x408F34; // LLC_LOOKUP event
     u64 event_select = 0x34; // LLC_LOOKUP event
     u64 umask = 0x11; // DATA_READ filter
     u64 config_value = (umask << 8) | event_select;
 
     printk(KERN_INFO "Setting up CHA controllers to monitor LLC_LOOKUP event\n");
 
-    for (i = 0; i < NUM_CHA; i++) {
-        // Configure the CHA controller
+    for (i = 0; i < NUM_CHA; i++) { // Configure the CHA controller
         native_write_msr(msr_addresses[4][i], (u32)config_value, (u32)(config_value >> 32));
         // Reset and enable the counter
         native_write_msr(msr_addresses[0][i], 0, 0); // Reset counter
@@ -76,10 +76,30 @@ static void perform_memory_task(void)
     kfree((void *)ptr);
 }
 
+static void analyze_cha_activity(u64 counter_values[NUM_CHA])
+{
+    int i;
+    u64 max_value = 0;
+    int max_cha = -1;
+
+    printk(KERN_INFO "Analyzing CHA activity:\n");
+
+    for (i = 0; i < NUM_CHA; i++) {
+        printk(KERN_INFO "CHA %2d: %llu\n", i, counter_values[i]);
+        if (counter_values[i] > max_value) {
+            max_value = counter_values[i];
+            max_cha = i;
+        }
+    }
+
+    printk(KERN_INFO "CHA with highest activity: %d (Value: %llu)\n", max_cha, max_value);
+}
+
 static void read_cha_counters(void)
 {
     int i, j;
     u64 msr_value;
+    u64 counter_values[NUM_COUNTERS][NUM_CHA] = {0};
 
     printk(KERN_INFO "Reading CHA counters for LLC_LOOKUP event\n");
 
@@ -87,8 +107,13 @@ static void read_cha_counters(void)
         printk(KERN_INFO "Counter %d (ctr%d):\n", i, i);
         for (j = 0; j < NUM_CHA; j++) {
             msr_value = native_read_msr(msr_addresses[i][j]);
+            counter_values[i][j] = msr_value;
             printk(KERN_INFO "CHA %2d | MSR 0x%04X: 0x%016llX\n", j, msr_addresses[i][j], msr_value);
         }
+        printk(KERN_INFO "\n");
+        
+        // Analyze activity for this counter
+        analyze_cha_activity(counter_values[i]);
         printk(KERN_INFO "\n");
     }
 }
